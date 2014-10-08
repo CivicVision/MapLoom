@@ -16,6 +16,7 @@ var SERVER_SERVICE_USE_PROXY = true;
   var configService_ = null;
   var q_ = null;
   var serverCount = 0;
+  var useGeonodeSearch;
 
   module.provider('serverService', function() {
     this.$get = function($rootScope, $http, $q, $location, $translate, dialogService, configService) {
@@ -28,6 +29,7 @@ var SERVER_SERVICE_USE_PROXY = true;
       configService_ = configService;
       configService_.serverList = servers;
       q_ = $q;
+      useGeonodeSearch = angular.module('geonode_main_search') !== null;
 
       return this;
     };
@@ -200,7 +202,10 @@ var SERVER_SERVICE_USE_PROXY = true;
 
       // save the config object on the server object so that when we save the server, we only pass the config as opposed
       // to anything else that the app ads to the server objects.
-      var server = {id: null, ptype: 'gxp_olsource', config: serverInfo, populatingLayersConfig: false};
+      var server = {
+        id: null, ptype: 'gxp_olsource', config: serverInfo,
+        populatingLayersConfig: false, useGeonodeSearch: false
+      };
 
       goog.object.extend(server, serverInfo, {});
 
@@ -215,6 +220,19 @@ var SERVER_SERVICE_USE_PROXY = true;
 
       var doWork = function() {
         console.log('---- MapService.layerInfo. trying to add server: ', server);
+
+        function serverAdded() {
+          server.id = serverCount++;
+          servers.push(server);
+          rootScope_.$broadcast('server-added', server.id);
+          deferredResponse.resolve(server);
+        }
+
+        if (server.useGeonodeSearch) {
+          serverAdded();
+          return; // using geonode search
+        }
+
         service_.populateLayersConfig(server)
             .then(function(response) {
               // set the id. it should always resolve to the length
@@ -223,10 +241,7 @@ var SERVER_SERVICE_USE_PROXY = true;
                     [translate_.instant('yes_btn'), translate_.instant('no_btn')], false).then(function(button) {
                   switch (button) {
                     case 0:
-                      server.id = serverCount++;
-                      servers.push(server);
-                      rootScope_.$broadcast('server-added', server.id);
-                      deferredResponse.resolve(server);
+                      serverAdded();
                       break;
                     case 1:
                       deferredResponse.reject(server);
@@ -238,10 +253,7 @@ var SERVER_SERVICE_USE_PROXY = true;
                 if (!goog.isDefAndNotNull(server.layersConfig)) {
                   server.layersConfig = [];
                 }
-                server.id = serverCount++;
-                servers.push(server);
-                rootScope_.$broadcast('server-added', server.id);
-                deferredResponse.resolve(server);
+                serverAdded();
               }
             }, function(reject) {
               deferredResponse.reject(reject);
@@ -284,6 +296,8 @@ var SERVER_SERVICE_USE_PROXY = true;
         } else {
           server.username = configService_.username;
           server.isLocal = true;
+          // might want to also support geonodeSearch for remote servers
+          server.useGeonodeSearch = useGeonodeSearch;
           server.name = translate_.instant('local_geoserver');
           doWork();
         }
@@ -364,6 +378,56 @@ var SERVER_SERVICE_USE_PROXY = true;
 
       console.log('---- ServerService.getLayerConfig: ', layerConfig);
       return layerConfig;
+    };
+
+    /**
+     * Get the specified layers capabilities from their respective virtual
+     * wms capabilities endpoint, loading if required.
+     * Returns a promise that will provide the loaded layer xml fragments.
+     * @param {number} serverId
+     * @param {array} layerTypeNames a specifier in the form workspace:layerName
+     */
+    this.getLayersVirtual = function(serverId, layerTypeNames) {
+      console.log(typeof serverId);
+      var server = this.getServerById(serverId);
+      if (!server.layersConfig) {
+        server.layersConfig = [];
+      }
+      // build a set of promises to fetch the caps
+      var jobs = layerTypeNames.map(function(e) {
+        var parts = e.split(/%3A|:/);
+        var deferred = q_.defer();
+        var existing = service_.getLayerConfig(serverId, parts[1]);
+        if (existing !== null) {
+          deferred.resolve(existing);
+          return deferred.promise;
+        }
+        var parser = new ol.format.WMSCapabilities();
+        var url = server.url.replace(/wms$/, '') + parts[0] + '/' + parts[1] +
+                  '/wms?SERVICE=WMS&REQUEST=GetCapabilities';
+        http_.get(url).then(function(xhr) {
+          if (xhr.status === 200) {
+            var response = parser.read(xhr.data);
+            if (goog.isDefAndNotNull(response.Capability) &&
+                goog.isDefAndNotNull(response.Capability.Layer)) {
+              deferred.resolve(response.Capability.Layer.Layer[0]);
+            } else {
+              deferred.reject('invalid response');
+            }
+          } else {
+            deferred.resolve('bad response ' + xhr.status);
+          }
+        }, function(xhr) {
+          deferred.resolve('bad request');
+        });
+        return deferred.promise;
+      });
+      // and another that extracts the results and returns them after merging
+      // into the existing layersConfig
+      return q_.all(jobs).then(function(layers) {
+        server.layersConfig = server.layersConfig.concat(layers);
+        return layers;
+      });
     };
 
     this.populateLayersConfig = function(server, force) {

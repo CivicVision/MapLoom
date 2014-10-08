@@ -21,12 +21,13 @@
         </div>
         <button tooltip-append-to-body="true" tooltip-placement="top" tooltip="{{'refresh_layers' | translate}}"
                 type="button"
+                ng-if="!useGeonodeSearch(currentServer)"
                 ng-click="serverService.populateLayersConfig(serverService.getServerById(currentServerId), true)" class="btn btn-default">
           <i class="glyphicon glyphicon-repeat"></i>
         </button>
       </div>
     </div>
-    <div class="form-group">
+    <div class="form-group" ng-if="!useGeonodeSearch(currentServer)">
       <div ng-class="{'input-group':filterLayers !== '' && filterLayers !== null && filterLayers !== undefined}">
         <input id="layer-filter" ng-model="filterLayers" type="text" class="form-control filter-field"
                placeholder="{{'filter_layers' | translate}}">
@@ -51,7 +52,7 @@
     <div class="add-layers-loading loom-loading" spinner-hidden="!currentServer.populatingLayersConfig"></div>
     <div class="form-group layer-container">
       <ul id="layer-list" class="list-group">
-        <li ng-repeat="layer in layersConfig = serverService.getLayersConfig(currentServerId) | filter:filterLayers | filter:filterAddedLayers"
+        <li ng-repeat="layer in layersConfig"
             class="list-group-item loom-layerinfo-popover" data-placement="left">
           <div class="row">
             <div class="col-xs-2">
@@ -65,10 +66,75 @@
         </li>
       </ul>
     </div>
+    <div ng-controller="geonode_search_controller" ng-if="useGeonodeSearch(currentServer)">
+        <div class="form-group">
+            <form>
+                <fieldset>
+                    <div class="input-group">
+                        <input name="text_search_input" id="text_search_input" ng-model="text_query" type="text"
+                               placeholder="Search by text" class="form-control">
+                        <span class="input-group-btn">
+                            <button class="btn btn-primary" type="submit" id="text_search_btn"><i class="glyphicon glyphicon-search"></i></button>
+                        </span>
+                    </div>
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+                            Sort By <span class="caret"></span>
+                        </button>
+                        <ul class="dropdown-menu" id="sort">
+                            <li><a data-value="-date" data-filter="order_by" class="selected" ng-click="single_choice_listener($event)">{% trans "Most recent" %}</a></li>
+                            <li><a data-value="date" data-filter="order_by" ng-click="single_choice_listener($event)">{% trans "Less recent" %}</a></li>
+                            <li><a data-value="title" data-filter="order_by" ng-click="single_choice_listener($event)">{% trans "A - Z" %}</a></li>
+                            <li><a data-value="-title" data-filter="order_by" ng-click="single_choice_listener($event)">{% trans "Z - A" %}</a></li>
+                            <li><a data-value="-popular_count" data-filter="order_by" ng-click="single_choice_listener($event)">{% trans "Most popular" %}</a></li>
+                        </ul>
+                    </div>
+                </fieldset>
+                <fieldset>
+                    <label>Show expanded</label>
+                    <input id="show-meta-info" type="checkbox" checked>
+                </fieldset>
+                <fieldset>
+                    <label>Limit search to map extent</label>
+                    <input id="current-extent" type="checkbox">
+                </fieldset>
+                <fieldset>
+                    <label>Limit search to current time range</label>
+                    <input id="current-time" disabled type="checkbox">
+                </fieldset>
+                <fieldset>
+                    <span>Total: </span>
+                    <span ng-bind="total_counts"></span>
+                    <a href><span class="glyphicon glyphicon-chevron-left" ng-click="paginate_down()"></span></a>
+                    <span>page </span>
+                    <span ng-model="page" ng-bind="page"></span>
+                    <span> of </span>
+                    <span ng-bind="numpages"></span>
+                    <a href><span class="glyphicon glyphicon-chevron-right" ng-click="paginate_up()"></span></a>
+                </fieldset>
+            </form>
+        </div>
+        <div class="form-group layer-container">
+            <ul id="search-results-layer-list" class="list-group">
+                <li ng-repeat="layer in results"
+                    class="list-group-item loom-layerinfo-popover" data-placement="left">
+                    <div class="row">
+                        <div class="col-xs-2">
+                            <div class="loom-check-button btn btn-xs" ng-change="searchItemSelected(layer)" ng-model="layer.add" btn-checkbox btn-checkbox-true="true"
+                   btn-checkbox-false="false">
+                                <i class="glyphicon" ng-class="{'glyphicon-unchecked': !layer.add, 'glyphicon-check': layer.add}"></i>
+                            </div>
+                        </div>
+                        <div class="ellipsis">{{ layer.title }}</div>
+                    </div>
+                </li>
+            </ul>
+        </div>
+    </div>
   </form>
 </div>
 <div class="modal-footer">
   <button type="button" class="btn btn-default" data-dismiss="modal" translate="close_btn">Close</button>
-  <button type="button" class="btn btn-primary" ng-click="addLayers(layersConfig)" data-dismiss="modal"
+  <button type="button" class="btn btn-primary" ng-click="addLayers()" data-dismiss="modal"
     translate="add_btn">Add</button>
 </div>

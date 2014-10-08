@@ -3,21 +3,37 @@
   var module = angular.module('loom_addlayers_directive', []);
 
   module.directive('loomAddlayers',
-      function($rootScope, serverService, mapService, geogitService, $translate, dialogService) {
+      function($rootScope, $filter, serverService, mapService, geogitService, $translate, dialogService) {
         return {
           templateUrl: 'addlayers/partials/addlayers.tpl.html',
           link: function(scope, element) {
+            // track selected geonode search items
+            var selectedSearchItems;
+            var useGeonodeSearch = angular.module('geonode_main_search') != null;
             scope.serverService = serverService;
             scope.currentServerId = -1;
             scope.currentServer = null;
             scope.filterLayers = null;
 
-            angular.element('#layer-filter')[0].attributes.placeholder.value = $translate.instant('filter_layers');
+            var filter = angular.element('#layer-filter');
+            if (filter.length > 0) {
+              filter[0].attributes.placeholder.value = $translate.instant('filter_layers');
+            }
+
+            scope.useGeonodeSearch = function(server) {
+              return useGeonodeSearch && (typeof server !== 'undefined' && server.useGeonodeSearch);
+            };
+
             scope.setCurrentServerId = function(serverId) {
               var server = serverService.getServerById(serverId);
               if (goog.isDefAndNotNull(server)) {
                 scope.currentServerId = serverId;
                 scope.currentServer = server;
+                var layers = serverService.getLayersConfig(serverId);
+                layers = $filter('filter')(layers, scope.filterLayers);
+                layers = $filter('filter')(layers, scope.filterAddedLayers);
+                scope.layersConfig = layers;
+                selectedSearchItems = [];
               }
             };
 
@@ -41,7 +57,33 @@
               return '';
             };
 
-            scope.addLayers = function(layersConfig) {
+            scope.searchItemSelected = function(item) {
+              if (item.add) {
+                selectedSearchItems.push(item);
+              } else {
+                selectedSearchItems.pop(item);
+              }
+            };
+
+            scope.addLayers = function() {
+              // if geonode search items, we need to first trigger a log of those
+              // specific layers
+              if (selectedSearchItems) {
+                var ids = selectedSearchItems.map(function(e) {
+                  return e.detail_url.split('/')[2]; // hack, it would be nice to have a more specific way
+                });
+                serverService.getLayersVirtual(scope.currentServerId, ids).then(function(layers) {
+                  layers.forEach(function(layer) {
+                    mapService.addLayer({
+                      name: layer.Name,
+                      source: scope.currentServerId
+                    });
+                  });
+                });
+                return;
+              }
+
+              var layersConfig = scope.layersConfig;
               // if the server is not a typical server and instead the hardcoded ones
               var length = layersConfig.length;
               for (var index = 0; index < length; index += 1) {
