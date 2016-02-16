@@ -1,5 +1,5 @@
 var SERVER_SERVICE_USE_PORT = false;
-var SERVER_SERVICE_USE_PROXY = true;
+var SERVER_SERVICE_USE_PROXY = false;
 
 (function() {
   var module = angular.module('loom_server_service', []);
