@@ -1,51 +1,88 @@
-angular.module('templates-common', ['addlayers/partials/addlayers.tpl.html', 'addlayers/partials/addserver.tpl.html', 'diff/partial/difflist.tpl.html', 'diff/partial/diffpanel.tpl.html', 'diff/partial/featurediff.tpl.html', 'diff/partial/featurepanel.tpl.html', 'diff/partial/panelseparator.tpl.html', 'featuremanager/partial/attributeedit.tpl.html', 'featuremanager/partial/drawselect.tpl.html', 'featuremanager/partial/exclusivemode.tpl.html', 'featuremanager/partial/featureinfobox.tpl.html', 'history/partial/historydiff.tpl.html', 'history/partial/historypanel.tpl.html', 'layers/partials/layerinfo.tpl.html', 'layers/partials/layers.tpl.html', 'legend/partial/legend.tpl.html', 'map/partial/chapterdelete.tpl.html', 'map/partial/mapproperties.tpl.html', 'map/partial/mapsave.tpl.html', 'map/partial/savemap.tpl.html', 'merge/partials/merge.tpl.html', 'modal/partials/dialog.tpl.html', 'modal/partials/modal.tpl.html', 'modal/partials/password.tpl.html', 'notifications/partial/generatenotification.tpl.html', 'notifications/partial/notificationbadge.tpl.html', 'notifications/partial/notifications.tpl.html', 'search/partial/search.tpl.html', 'statistics/partial/statistics.tpl.html', 'storybox/partials/addstorybox.tpl.html', 'storybox/partials/boxinfo.tpl.html', 'storybox/partials/storyboxes.tpl.html', 'sync/partials/addsync.tpl.html', 'sync/partials/remoteselect.tpl.html', 'sync/partials/syncconfig.tpl.html', 'sync/partials/synclinks.tpl.html', 'tableview/partial/filteroptions.tpl.html', 'tableview/partial/tableview.tpl.html', 'timeline/partials/timeline.tpl.html', 'updatenotification/partial/updatenotification.tpl.html', 'utils/partial/loading.tpl.html']);
+angular.module('templates-common', ['addlayers/partials/addlayers.tpl.html', 'addlayers/partials/addserver.tpl.html', 'diff/partial/difflist.tpl.html', 'diff/partial/diffpanel.tpl.html', 'diff/partial/featurediff.tpl.html', 'diff/partial/featurepanel.tpl.html', 'diff/partial/panelseparator.tpl.html', 'featuremanager/partial/attributeedit.tpl.html', 'featuremanager/partial/drawselect.tpl.html', 'featuremanager/partial/exclusivemode.tpl.html', 'featuremanager/partial/featureinfobox.tpl.html', 'history/partial/historydiff.tpl.html', 'history/partial/historypanel.tpl.html', 'layers/partials/layerinfo.tpl.html', 'layers/partials/layers.tpl.html', 'legend/partial/legend.tpl.html', 'map/partial/savemap.tpl.html', 'merge/partials/merge.tpl.html', 'modal/partials/dialog.tpl.html', 'modal/partials/modal.tpl.html', 'modal/partials/password.tpl.html', 'notifications/partial/generatenotification.tpl.html', 'notifications/partial/notificationbadge.tpl.html', 'notifications/partial/notifications.tpl.html', 'search/partial/search.tpl.html', 'statistics/partial/statistics.tpl.html', 'storybox/partials/addstorybox.tpl.html', 'storybox/partials/boxinfo.tpl.html', 'storybox/partials/storyboxes.tpl.html', 'sync/partials/addsync.tpl.html', 'sync/partials/remoteselect.tpl.html', 'sync/partials/syncconfig.tpl.html', 'sync/partials/synclinks.tpl.html', 'tableview/partial/filteroptions.tpl.html', 'tableview/partial/tableview.tpl.html', 'timeline/partials/timeline.tpl.html', 'updatenotification/partial/updatenotification.tpl.html', 'utils/partial/loading.tpl.html']);
 
 angular.module("addlayers/partials/addlayers.tpl.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("addlayers/partials/addlayers.tpl.html",
-    "<div>\n" +
-    "    <div class=\"modal-header\">\n" +
-    "        <button type=\"button\" class=\"close\" ng-click=\"$dismiss()\">x</button>\n" +
-    "        <h4 class=\"modal-title\">Explore StoryLayers</h4>\n" +
-    "    </div>\n" +
+    "<div class=\"modal-body\">\n" +
+    "  <form class=\"form-horizontal col-md-12\">\n" +
+    "    <div class=\"form-group\">\n" +
+    "      <div class=\"btn-group custom-width-100\">\n" +
+    "        <div class=\"btn-group custom-width-88\">\n" +
+    "          <button type=\"button\" class=\"btn btn-default dropdown-toggle custom-width-100\" data-toggle=\"dropdown\">\n" +
+    "            <span class=\"pull-left\"> {{getCurrentServerName()}} </span>\n" +
+    "            <span class=\"caret right-and-center\"></span>\n" +
+    "          </button>\n" +
+    "          <ul id=\"server-list\" class=\"dropdown-menu col-md-12\">\n" +
+    "            <li ng-repeat=\"server in servers = serverService.getServers()\">\n" +
+    "              <a ng-click=\"setCurrentServerId(server.id)\">{{server.name}}\n" +
+    "                <div ng-hide=\"server.defaultServer\" stop-event='click' ng-click=\"removeServer(server.id)\" class=\"glyphicon glyphicon-remove-circle pull-right\"></div>\n" +
+    "                <div ng-hide=\"server.defaultServer\" stop-event='click' ng-click=\"editServer(server)\" class=\"glyphicon glyphicon-pencil pull-right server-edit-icon\"></div>\n" +
+    "              </a>\n" +
     "\n" +
-    "    <div class=\"modal-body explorer-mini\">\n" +
-    "        <div class=\"row\">\n" +
-    "            <div class=\"col-md-12\">\n" +
-    "                <ul class=\"nav nav-tabs\">\n" +
-    "                    <li ng-class=\"selected.explore && 'active'\"><a ng-click=\"selected = {explore:true}; remove_query('title__icontains');remove_query('owner__username__in');add_single_query('order_by','title');\" data-toggle=\"tab\">Explore All</a></li>\n" +
-    "                    <li ng-class=\"selected.common && 'active'\"><a ng-click=\"selected = {common:true}; add_single_query('order_by','-popular_count');\" data-toggle=\"tab\">Common</a></li>\n" +
-    "                    <li ng-class=\"selected.uploads && 'active'\"><a ng-click=\"selected = {uploads:true}; add_single_query('order_by','title');add_single_query('owner__username__in', '{{ request.user.username}}');\" data-toggle=\"tab\">My Uploads</a></li>\n" +
-    "                </ul>\n" +
-    "            </div>\n" +
-    "            <div class=\"tab-content col-md-12\" style=\"min-height:270px;\">\n" +
-    "                <div class=\"tab-pane active\" id=\"Explore\">\n" +
-    "                    <div>\n" +
-    "                        <div>\n" +
-    "                            <nav class=\"filter\">\n" +
-    "                                <div class=\"input-group search-bar\" >\n" +
-    "                                    <input name=\"text_search_input_exp\" id=\"text_search_input_exp\" placeholder=\"Search for StoryLayers ...\" ng-model=\"layerName\" type=\"text\" class=\"form-control search-input\">\n" +
-    "                                    <span class=\"input-group-btn\">\n" +
-    "                                        <button class=\"btn btn-primary search-btn\" ng-disabled=\"!layerName\" type=\"submit\" id=\"text_search_btn\"><i class=\"glyphicon glyphicon-search\"></i> Search</button>\n" +
-    "                                    </span>\n" +
-    "                                </div>\n" +
-    "                            </nav>\n" +
-    "                            <div class=\"clearfix search-results\">\n" +
-    "                                <!-- TODO: Query MapLoom API and display results in a grid -->\n" +
-    "                            </div>\n" +
-    "                            <div class=\"search-pagination\">\n" +
-    "                            </div>\n" +
-    "                        </div>\n" +
-    "                    </div>\n" +
-    "                </div>\n" +
-    "            </div>\n" +
+    "            </li>\n" +
+    "            <li class=\"divider\"></li>\n" +
+    "            <li><a data-target=\"#add-server-dialog\" data-toggle=\"modal\" translate=\"add_new_server\">Add New Server</a></li>\n" +
+    "          </ul>\n" +
     "        </div>\n" +
+    "        <button tooltip-append-to-body=\"true\" tooltip-placement=\"top\" tooltip=\"{{'refresh_layers' | translate}}\"\n" +
+    "                type=\"button\"\n" +
+    "                ng-click=\"serverService.populateLayersConfig(serverService.getServerById(currentServerId), true)\" class=\"btn btn-default\">\n" +
+    "          <i class=\"glyphicon glyphicon-repeat\"></i>\n" +
+    "        </button>\n" +
+    "      </div>\n" +
     "    </div>\n" +
-    "    <div class=\"modal-footer\">\n" +
-    "        <span class=\"pull-left\"></span>\n" +
-    "        <button type =\"button\" class=\"btn btn-default\" ng-click=\"$dismiss()\">Close</button>\n" +
-    "        <button class=\"btn btn-primary\" ng-disabled=\"selected_results.length == 0\" ng-click=\"$close(selected_results)\">Use Selected</button>\n" +
+    "    <div class=\"form-group\">\n" +
+    "      <div ng-class=\"{'input-group':filterLayers !== '' && filterLayers !== null && filterLayers !== undefined}\">\n" +
+    "        <input id=\"layer-filter\" ng-model=\"filterLayers\" type=\"text\" class=\"form-control filter-field\"\n" +
+    "               placeholder=\"{{'filter_layers' | translate}}\">\n" +
+    "        <span ng-if=\"filterLayers !== '' && filterLayers != null && filterLayers != undefined\" class=\"input-group-btn\">\n" +
+    "          <a class=\"btn btn-default\" ng-click=\"clearFilter()\" type=\"button\">\n" +
+    "            <i class=\"glyphicon glyphicon-remove\"></i>\n" +
+    "          </a>\n" +
+    "        </span>\n" +
+    "      </div>\n" +
     "    </div>\n" +
-    "</div>");
+    "    <div class=\"form-group\" ng-if=\"currentServer.username !== null && currentServer.username !== undefined\">\n" +
+    "      <div ng-class=\"{'input-group':!currentServer.isLocal}\">\n" +
+    "        <input type=\"text\" value=\"{{getConnectedString()}}\" disabled class=\"form-control logged-in-as-input\">\n" +
+    "        <span class=\"input-group-btn\" ng-if=\"!currentServer.isLocal\">\n" +
+    "          <a class=\"switch-user-btn btn btn-default\" tooltip-append-to-body=\"true\" tooltip-placement=\"top\"\n" +
+    "             tooltip=\"{{'connect_as' | translate}}\" ng-click=\"changeCredentials()\" type=\"button\">\n" +
+    "            <i class=\"glyphicon glyphicon-transfer\"></i>\n" +
+    "          </a>\n" +
+    "        </span>\n" +
+    "      </div>\n" +
+    "    </div>\n" +
+    "    <button type=\"button\" style=\"margin-left:-15px;\" ng-if=\"currentServer.lazy && currentServer.layersConfig.length===0 && !currentServer.populatingLayersConfig\"\n" +
+    "            tooltip=\"This server is configured to lazily load layers.\" tooltip-placement=\"right\"\n" +
+    "            class=\"btn btn-default\" ng-click=\"serverService.populateLayersConfig(serverService.getServerById(currentServerId), true)\">\n" +
+    "      <i class=\"glyphicon glyphicon-save\"></i>\n" +
+    "      <span>{{'fetch_layers_from_server' | translate}}</span>\n" +
+    "    </button>\n" +
+    "    <div class=\"add-layers-loading loom-loading\" spinner-hidden=\"!currentServer.populatingLayersConfig\"></div>\n" +
+    "    <div class=\"form-group layer-container\">\n" +
+    "      <ul id=\"layer-list\" class=\"list-group\">\n" +
+    "        <li ng-repeat=\"layer in layersConfig = serverService.getLayersConfig(currentServerId) | filter:filterLayers | filter:filterAddedLayers\"\n" +
+    "            class=\"list-group-item loom-layerinfo-popover\" data-placement=\"left\">\n" +
+    "          <div class=\"row\">\n" +
+    "            <div class=\"col-xs-2\">\n" +
+    "              <div class=\"loom-check-button btn btn-xs\" ng-model=\"layer.add\" btn-checkbox btn-checkbox-true=\"true\"\n" +
+    "                   btn-checkbox-false=\"false\">\n" +
+    "                <i class=\"glyphicon\" ng-class=\"{'glyphicon-unchecked': !layer.add, 'glyphicon-check': layer.add}\"></i>\n" +
+    "              </div>\n" +
+    "            </div>\n" +
+    "            <div class=\"ellipsis\">{{layer.Title}}</div>\n" +
+    "          </div>\n" +
+    "        </li>\n" +
+    "      </ul>\n" +
+    "    </div>\n" +
+    "  </form>\n" +
+    "</div>\n" +
+    "<div class=\"modal-footer\">\n" +
+    "  <button type=\"button\" class=\"btn btn-default\" data-dismiss=\"modal\" translate=\"close_btn\">Close</button>\n" +
+    "  <button type=\"button\" class=\"btn btn-primary\" ng-click=\"addLayers(layersConfig)\" data-dismiss=\"modal\"\n" +
+    "    translate=\"add_btn\">Add</button>\n" +
+    "</div>\n" +
+    "");
 }]);
 
 angular.module("addlayers/partials/addserver.tpl.html", []).run(["$templateCache", function($templateCache) {
@@ -873,79 +910,6 @@ angular.module("legend/partial/legend.tpl.html", []).run(["$templateCache", func
     "</div>");
 }]);
 
-angular.module("map/partial/chapterdelete.tpl.html", []).run(["$templateCache", function($templateCache) {
-  $templateCache.put("map/partial/chapterdelete.tpl.html",
-    "\n" +
-    "<div class=\"modal-footer\">\n" +
-    "    <button id=\"removeChapter\" type=\"button\" class=\"btn btn-default\" data-dismiss=\"modal\" ng-click=\"storyService.remove_chapter()\">Yes</button>\n" +
-    "    <button type=\"button\" class=\"btn btn-default\" data-dismiss=\"modal\">Cancel</button>\n" +
-    "</div>\n" +
-    "\n" +
-    "\n" +
-    "");
-}]);
-
-angular.module("map/partial/mapproperties.tpl.html", []).run(["$templateCache", function($templateCache) {
-  $templateCache.put("map/partial/mapproperties.tpl.html",
-    "<div class=\"modal-body\">\n" +
-    "    <form class=\"form-horizontal col-md-12\">\n" +
-    "        <div class=\"form-group\">\n" +
-    "            <div class=\"form-group\">\n" +
-    "                <label for=\"mapTitle\">{{ 'title' | translate }}</label> <input id=\"mapTitle\" ng-model=\"storyService.title\" type=\"text\" class=\"form-control\" value=\"{{storyService.title}}\" placeholder=\"{{storyService.title || ('title' | translate)}}\">\n" +
-    "            </div>\n" +
-    "            <div class=\"form-group\">\n" +
-    "                <label for=\"mapAbstract\">Summary</label><textarea id=\"mapAbstract\" ng-model=\"storyService.abstract\" class=\"form-control\" rows=\"4\" value=\"{{storyService.abstract}}\" placeholder=\"Summary\"></textarea>\n" +
-    "            </div>\n" +
-    "            <div class=\"form-group\">\n" +
-    "                <label for=\"id_category\" class=\"control-label  \">\n" +
-    "                    Category\n" +
-    "                </label>\n" +
-    "                <div class=\"\">\n" +
-    "                    <select class=\"form-control\" id=\"id_category\" name=\"category\" ng-model=\"storyService.category\">\n" +
-    "                        <option value=\"\" selected=\"selected\">---------</option>\n" +
-    "                        <option value=\"1\">Biography</option>\n" +
-    "                        <option value=\"13\">Crisis</option>\n" +
-    "                        <option value=\"3\">Culture & Ideas</option>\n" +
-    "                        <option value=\"6\">Geopolitics</option>\n" +
-    "                        <option value=\"2\">Health</option>\n" +
-    "                        <option value=\"11\">Human Settlement</option>\n" +
-    "                        <option value=\"9\">Nature & Environment</option>\n" +
-    "                        <option value=\"19\">Science & Industry</option>\n" +
-    "                    </select>\n" +
-    "                    <p class=\"help-block\">high-level geographic data thematic classification to assist in the grouping and search of available geographic data sets.</p>\n" +
-    "                </div>\n" +
-    "            </div>\n" +
-    "            <div class=\"form-group\">\n" +
-    "                <label for=\"mapKeywords\">Keywords</label><textarea id=\"mapKeywords\" ng-model=\"storyService.keywords\" class=\"form-control\" value=\"{{storyService.keywords}}\"></textarea>\n" +
-    "                <p class=\"help-block\">commonly used word(s) or formalised word(s) or phrase(s) used to describe the subject (space or comma-separated).</p>\n" +
-    "            </div>\n" +
-    "        </div>\n" +
-    "    </form>\n" +
-    "</div>\n" +
-    "<div class=\"modal-footer\">\n" +
-    "  <button type=\"button\" class=\"btn btn-primary\" data-dismiss=\"modal\">{{'save_btn' | translate}}</button>\n" +
-    "</div>\n" +
-    "\n" +
-    "\n" +
-    "");
-}]);
-
-angular.module("map/partial/mapsave.tpl.html", []).run(["$templateCache", function($templateCache) {
-  $templateCache.put("map/partial/mapsave.tpl.html",
-    "\n" +
-    "<div class=\"modal-footer\">\n" +
-    "    <button type=\"button\" class=\"btn btn-default\" data-dismiss=\"modal\">{{'close_btn' | translate }}</button>\n" +
-    "    <button type=\"button\" class=\"btn btn-primary\" data-dismiss=\"modal\" ng-disabled=\"!configService.username\"\n" +
-    "          ng-click=\"storyService.save()\">Save as Draft</button>\n" +
-    "    <!-- If they pick publish, set the published model to true? -->\n" +
-    "  <button type=\"button\" class=\"btn btn-primary\" data-dismiss=\"modal\" ng-disabled=\"!configService.username\"\n" +
-    "          ng-click=\"storyService.is_published = true; storyService.save();\">Publish</button>\n" +
-    "</div>\n" +
-    "\n" +
-    "\n" +
-    "");
-}]);
-
 angular.module("map/partial/savemap.tpl.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("map/partial/savemap.tpl.html",
     "<div class=\"modal-body\">\n" +
@@ -1295,6 +1259,90 @@ angular.module("storybox/partials/addstorybox.tpl.html", []).run(["$templateCach
     "\n" +
     "            </div>\n" +
     "        </div>\n" +
+    "        <!--div class=\"row\">\n" +
+    "            <div class=\"col-xs-6\">\n" +
+    "                <div class=\"form-group\">\n" +
+    "                    <label for=\"playbackRate\">Playback Rate</label>\n" +
+    "\n" +
+    "                    <div class=\"input-group\">\n" +
+    "                        <input type=\"number\" ng-model=\"box.playbackRate\" class=\"form-control\"\n" +
+    "                               style=\"float: left;width: 50%;\" id=\"playbackRate\">\n" +
+    "                        <select class=\"form-control\" ng-model=\"box.playbackRateUnit\"\n" +
+    "                                style=\"-webkit-appearance:none; border-left:0px; float: left;width: initial;\">\n" +
+    "                            <option>Seconds</option>\n" +
+    "                            <option>Minutes</option>\n" +
+    "                        </select>\n" +
+    "                    </div>\n" +
+    "                </div>\n" +
+    "            </div>\n" +
+    "            <div class=\"col-xs-6\">\n" +
+    "                <div class=\"form-group\">\n" +
+    "                    <label for=\"timestep\">Timestep</label>\n" +
+    "                    <div class=\"input-group\">\n" +
+    "                        <input type=\"number\" ng-model=\"box.timeStep\" class=\"form-control\"\n" +
+    "                               style=\"float: left;width: 50%;\" id=\"timestep\">\n" +
+    "                        <select class=\"form-control\" ng-model=\"box.timeStepUnit\"\n" +
+    "                                style=\"-webkit-appearance:none; border-left:0px; float: left;width: initial;\">\n" +
+    "                            <option>Minutes</option>\n" +
+    "                            <option>Hours</option>\n" +
+    "                            <option>Weeks</option>\n" +
+    "                            <option>Months</option>\n" +
+    "                            <option>Years</option>\n" +
+    "                        </select>\n" +
+    "                    </div>\n" +
+    "                </div>\n" +
+    "            </div>\n" +
+    "        </div-->\n" +
+    "\n" +
+    "\n" +
+    "        <!--div class=\"form-group\">\n" +
+    "          <div class=\"btn-group custom-width-100\">\n" +
+    "            <div class=\"btn-group custom-width-88\">\n" +
+    "              <button type=\"button\" class=\"btn btn-default dropdown-toggle custom-width-100\" data-toggle=\"dropdown\">\n" +
+    "                <span class=\"pull-left\"> {{getCurrentServerName()}} </span>\n" +
+    "                <span class=\"caret right-and-center\"></span>\n" +
+    "              </button>\n" +
+    "              <ul id=\"server-list\" class=\"dropdown-menu col-md-12\">\n" +
+    "                <li ng-repeat=\"server in servers = serverService.getServers()\">\n" +
+    "                  <a ng-click=\"setCurrentServerId(server.id)\">{{server.name}}\n" +
+    "                    <div ng-hide=\"server.defaultServer\" stop-event='click' ng-click=\"removeServer(server.id)\" class=\"glyphicon glyphicon-remove-circle pull-right\"></div>\n" +
+    "                    <div ng-hide=\"server.defaultServer\" stop-event='click' ng-click=\"editServer(server)\" class=\"glyphicon glyphicon-pencil pull-right server-edit-icon\"></div>\n" +
+    "                  </a>\n" +
+    "\n" +
+    "                </li>\n" +
+    "                <li class=\"divider\"></li>\n" +
+    "                <li><a data-target=\"#add-server-dialog\" data-toggle=\"modal\" translate=\"add_new_server\">Add New Server</a></li>\n" +
+    "              </ul>\n" +
+    "            </div>\n" +
+    "            <button tooltip-append-to-body=\"true\" tooltip-placement=\"top\" tooltip=\"{{'refresh_layers' | translate}}\"\n" +
+    "                    type=\"button\"\n" +
+    "                    ng-click=\"serverService.populateLayersConfig(serverService.getServerById(currentServerId), true)\" class=\"btn btn-default\">\n" +
+    "              <i class=\"glyphicon glyphicon-repeat\"></i>\n" +
+    "            </button>\n" +
+    "          </div>\n" +
+    "        </div-->\n" +
+    "        <!--div class=\"form-group\">\n" +
+    "          <div ng-class=\"{'input-group':filterLayers !== '' && filterLayers !== null && filterLayers !== undefined}\">\n" +
+    "            <input id=\"layer-filter\" ng-model=\"filterLayers\" type=\"text\" class=\"form-control filter-field\"\n" +
+    "                   placeholder=\"{{'filter_layers' | translate}}\">\n" +
+    "            <span ng-if=\"filterLayers !== '' && filterLayers != null && filterLayers != undefined\" class=\"input-group-btn\">\n" +
+    "              <a class=\"btn btn-default\" ng-click=\"clearFilter()\" type=\"button\">\n" +
+    "                <i class=\"glyphicon glyphicon-remove\"></i>\n" +
+    "              </a>\n" +
+    "            </span>\n" +
+    "          </div>\n" +
+    "        </div>\n" +
+    "        <div class=\"form-group\" ng-if=\"currentServer.username !== null && currentServer.username !== undefined\">\n" +
+    "          <div ng-class=\"{'input-group':!currentServer.isLocal}\">\n" +
+    "            <input type=\"text\" value=\"{{getConnectedString()}}\" disabled class=\"form-control logged-in-as-input\">\n" +
+    "            <span class=\"input-group-btn\" ng-if=\"!currentServer.isLocal\">\n" +
+    "              <a class=\"switch-user-btn btn btn-default\" tooltip-append-to-body=\"true\" tooltip-placement=\"top\"\n" +
+    "                 tooltip=\"{{'connect_as' | translate}}\" ng-click=\"changeCredentials()\" type=\"button\">\n" +
+    "                <i class=\"glyphicon glyphicon-transfer\"></i>\n" +
+    "              </a>\n" +
+    "            </span>\n" +
+    "          </div>\n" +
+    "        </div-->\n" +
     "        <button type=\"button\" style=\"margin-left:-15px;\"\n" +
     "                ng-if=\"currentServer.lazy && currentServer.layersConfig.length===0 && !currentServer.populatingLayersConfig\"\n" +
     "                tooltip=\"This server is configured to lazily load layers.\" tooltip-placement=\"right\"\n" +
@@ -1304,6 +1352,24 @@ angular.module("storybox/partials/addstorybox.tpl.html", []).run(["$templateCach
     "            <span>{{'fetch_layers_from_server' | translate}}</span>\n" +
     "        </button>\n" +
     "        <div class=\"add-layers-loading loom-loading\" spinner-hidden=\"!currentServer.populatingLayersConfig\"></div>\n" +
+    "        <div class=\"form-group layer-container\">\n" +
+    "            <ul id=\"layer-list\" class=\"list-group\">\n" +
+    "                <li ng-repeat=\"layer in layersConfig = serverService.getLayersConfig(currentServerId) | filter:filterLayers | filter:filterAddedLayers\"\n" +
+    "                    class=\"list-group-item loom-layerinfo-popover\" data-placement=\"left\">\n" +
+    "                    <div class=\"row\">\n" +
+    "                        <div class=\"col-xs-2\">\n" +
+    "                            <div class=\"loom-check-button btn btn-xs\" ng-model=\"layer.add\" btn-checkbox\n" +
+    "                                 btn-checkbox-true=\"true\"\n" +
+    "                                 btn-checkbox-false=\"false\">\n" +
+    "                                <i class=\"glyphicon\"\n" +
+    "                                   ng-class=\"{'glyphicon-unchecked': !layer.add, 'glyphicon-check': layer.add}\"></i>\n" +
+    "                            </div>\n" +
+    "                        </div>\n" +
+    "                        <div class=\"ellipsis\">{{layer.title}}</div>\n" +
+    "                    </div>\n" +
+    "                </li>\n" +
+    "            </ul>\n" +
+    "        </div>\n" +
     "        <!--pre>box = {{box | json}}</pre-->\n" +
     "    </form>\n" +
     "</div>\n" +
@@ -1319,9 +1385,6 @@ angular.module("storybox/partials/addstorybox.tpl.html", []).run(["$templateCach
 angular.module("storybox/partials/boxinfo.tpl.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("storybox/partials/boxinfo.tpl.html",
     "<div class=\"modal-body\">\n" +
-    "    <div ng-show=\"range\">\n" +
-    "        <div class=\"well\">{{range}}</div>\n" +
-    "    </div>\n" +
     "    <div ng-show=\"title\">\n" +
     "        <div><h4 translate=\"title\"></h4></div>\n" +
     "        <div class=\"well\">{{title}}</div>\n" +
@@ -1345,6 +1408,14 @@ angular.module("storybox/partials/storyboxes.tpl.html", []).run(["$templateCache
     "      <div class=\"row\">\n" +
     "        <div class=\"layer-title ellipsis\" ng-class=\"{'placeholder-storybox-title': storyBox.title}\">\n" +
     "          {{storyBox.title }}\n" +
+    "        </div>\n" +
+    "        <div class=\"layer-buttons\">\n" +
+    "          <span ng-click=\"showEditForm(storyBox)\" tooltip-append-to-body=\"true\"\n" +
+    "                tooltip-placement=\"top\" tooltip=\"{{'edit_box' | translate}}\"\n" +
+    "                ng-show=\"storyBox\" stop-event=\"click mousedown\" class=\"btn btn-xs btn-default\"\n" +
+    "                ng-disabled=\"(!storyBox)\">\n" +
+    "            <i class=\"glyphicon glyphicon-pencil\"></i>\n" +
+    "          </span>\n" +
     "        </div>\n" +
     "      </div>\n" +
     "    </div>\n" +
@@ -1371,6 +1442,23 @@ angular.module("storybox/partials/storyboxes.tpl.html", []).run(["$templateCache
     "            </a>\n" +
     "          </div>\n" +
     "        </div>\n" +
+    "        <!--label id=\"attribute-label\" for=\"attributeRow\" ng-show=\"storyBox\">{{'attributes' |\n" +
+    "          translate}}</label-->\n" +
+    "\n" +
+    "        <!--div id=\"attributeRow\" class=\"row\" ng-show=\"storyBox\">\n" +
+    "          <ul class=\"list-group\">\n" +
+    "            <li class=\"list-group-item\" ng-repeat=\"attribute in getAttrListd(storyBox)\">\n" +
+    "              <div class=\"attribute-value ellipsis\">{{attribute}}</div>\n" +
+    "              <div class=\"layer-buttons\">\n" +
+    "              <span ng-click=\"toggleAttributeVisibility(attribute)\"\n" +
+    "                    class=\"btn btn-xs btn-default layer-visible-button\"\n" +
+    "                    ng-class=\"{'layer-visible': attribute.visible}\">\n" +
+    "                <i class=\"glyphicon\" ng-class=\"{'glyphicon-eye-close': !attribute.visible, 'glyphicon-eye-open': attribute.visible}\"></i>\n" +
+    "              </span>\n" +
+    "              </div>\n" +
+    "            </li>\n" +
+    "          </ul>\n" +
+    "        </div-->\n" +
     "      </div>\n" +
     "    </div>\n" +
     "  </div>\n" +
